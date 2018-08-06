@@ -177,29 +177,39 @@ Scope.prototype.$$postDigest = function(expr){
   this.$$postDigestQueue.push(expr);
 }
 
-Scope.prototype.$watchGroup = function(watchers, listenerFn) {
+Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
   var self = this;
-  var newValues = new Array(watchers.length);
-  var oldValues = new Array(watchers.length);
+  var newValues = new Array(watchFns.length);
+  var oldValues = new Array(watchFns.length);
+  var changed = false;
+  var isFirstRun = false;
 
-  var changeReactionScheduled = false;
-
-  function watchGroupListener(){
-    listenerFn(newValues, oldValues, self);
-    changeReactionScheduled = false;
+  if (watchFns.length === 0) {
+    self.$evalAsync(function(){
+      listenerFn(newValues, oldValues, self);
+    })
+    return;
   }
 
-  _.forEach(watchers, function(watchFn, i) {
+  function listenerFns(){
+    changed = false;
+    listenerFn(newValues, (!isFirstRun ? newValues : oldValues), self);
+    isFirstRun = true;
+  }
+
+
+  _.forEach(watchFns, function(watchFn, i) {
     self.$watch(watchFn, function(newValue, oldValue) {
       newValues[i] = newValue;
       oldValues[i] = oldValue;
 
-      if (!changeReactionScheduled) {
-        changeReactionScheduled = true;
-        self.$evalAsync(watchGroupListener);
+      if (!changed) {
+        changed = true;
+        self.$evalAsync(listenerFns);
       }
     });
   });
+
 }
 
 module.exports = Scope;
