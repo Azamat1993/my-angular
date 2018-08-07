@@ -898,4 +898,90 @@ describe('Scope', function(){
       expect(counter).toEqual(0);
     });
   });
+
+  describe('inheritance', function(){
+    it('inherits the parent\'s properties', function(){
+      var parent = new Scope();
+      parent.aValue = [1,2,3];
+
+      var child = parent.$new();
+
+      expect(child.aValue).toEqual([1,2,3]);
+    });
+
+    it('does not cause a parent to inherit its properties', function(){
+      var parent = new Scope();
+
+      var child = parent.$new();
+
+      child.aValue = [1,2,3];
+      expect(parent.aValue).toBeUndefined();
+    });
+
+    it('inherits the parents properties whenever they are defined', function(){
+      var parent = new Scope();
+      var child = parent.$new();
+
+      parent.aValue = [1,2,3];
+
+      expect(child.aValue).toEqual([1,2,3]);
+    });
+
+    it('can manipulate a parent scopes property', function(){
+      var parent = new Scope();
+      var child = parent.$new();
+
+      parent.aValue = [1,2,3];
+
+      child.aValue.push(4);
+
+      expect(parent.aValue).toEqual([1,2,3,4]);
+      expect(child.aValue).toEqual([1,2,3,4]);
+    });
+
+    it('can be nested at any depth', function(){
+      var a = new Scope();
+      var aa = a.$new();
+      var aaa = aa.$new();
+      var aab = aa.$new();
+      var ab = a.$new();
+      var abb = ab.$new();
+
+      a.value = 1;
+
+      expect(aa.value).toBe(1);
+      expect(aaa.value).toBe(1);
+      expect(aab.value).toBe(1);
+      expect(ab.value).toBe(1);
+      expect(abb.value).toBe(1);
+
+      ab.anotherValue = 2;
+
+      expect(abb.anotherValue).toBe(2);
+      expect(aa.anotherValue).toBeUndefined();
+      expect(aaa.anotherValue).toBeUndefined();
+    });
+
+    it('shadows a parents property with the same name', function(){
+      var parent = new Scope();
+      var child = parent.$new();
+
+      parent.name = 'Joe';
+      child.name = 'Jill';
+
+      expect(parent.name).toBe('Joe');
+      expect(child.name).toBe('Jill');
+    });
+
+    it('does not shadow members of parent scopes attributes', function(){
+      var parent = new Scope();
+      var child = parent.$new();
+
+      parent.user = {name: 'Jill'};
+      child.user.name = 'Joe';
+
+      expect(parent.user.name).toBe('Joe');
+      expect(child.user.name).toBe('Joe');
+    });
+  });
 });
