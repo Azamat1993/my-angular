@@ -72,10 +72,6 @@ Scope.prototype.$digest = function(){
   }
 
   this.$clearPhase();
-
-  _.forEach(this.$$children, function(child) {
-    child.$digest();
-  });
 }
 
 Scope.prototype.$$everyScope = function(fn){
@@ -90,29 +86,35 @@ Scope.prototype.$$everyScope = function(fn){
 
 Scope.prototype.$$digestOnce = function(){
   var self = this;
-  var newValue, oldValue;
   var dirty = false;
+  var continueLoop = true;
 
-  _.forEachRight(this.$$watchers, function(watcher){
-    try {
-      if (watcher) {
-        newValue = watcher.watchFn(self);
-        oldValue = watcher.last;
+  this.$$everyScope(function(scope) {
+    var newValue, oldValue;
+    _.forEachRight(scope.$$watchers, function(watcher){
+      try {
+        if (watcher) {
+          newValue = watcher.watchFn(scope);
+          oldValue = watcher.last;
 
-        if (!self.$$areEqual(newValue, oldValue, watcher.valueEq)) {
-          self.$$lastWatchFn = watcher;
-          watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
-          watcher.listenerFn(newValue,
-            (oldValue === initWatchFn ? newValue : oldValue), self);
+          if (!scope.$$areEqual(newValue, oldValue, watcher.valueEq)) {
+            self.$$lastWatchFn = watcher;
+            watcher.last = watcher.valueEq ? _.cloneDeep(newValue) : newValue;
+            watcher.listenerFn(newValue,
+              (oldValue === initWatchFn ? newValue : oldValue), scope);
 
-          dirty = true;
-        } else if (self.$$lastWatchFn === watcher) {
-          return false;
+            dirty = true;
+          } else if (self.$$lastWatchFn === watcher) {
+            continueLoop = false;
+            return false;
+          }
         }
+      } catch(e) {
+        console.error(e);
       }
-    } catch(e) {
-      console.error(e);
-    }
+    });
+
+    return continueLoop = false;
   });
 
   return dirty;
