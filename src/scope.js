@@ -181,35 +181,44 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
   var self = this;
   var newValues = new Array(watchFns.length);
   var oldValues = new Array(watchFns.length);
-  var changed = false;
-  var isFirstRun = false;
 
-  if (watchFns.length === 0) {
+  if(watchFns.length === 0) {
+    var destroy = false;
     self.$evalAsync(function(){
-      listenerFn(newValues, oldValues, self);
-    })
-    return;
-  }
-
-  function listenerFns(){
-    changed = false;
-    listenerFn(newValues, (!isFirstRun ? newValues : oldValues), self);
-    isFirstRun = true;
-  }
-
-
-  _.forEach(watchFns, function(watchFn, i) {
-    self.$watch(watchFn, function(newValue, oldValue) {
-      newValues[i] = newValue;
-      oldValues[i] = oldValue;
-
-      if (!changed) {
-        changed = true;
-        self.$evalAsync(listenerFns);
+      if (!destroy) {
+        listenerFn(newValues, oldValues, self);
       }
     });
+    return function(){
+      destroy = true;
+    };
+  }
+
+  var changed = false;
+  var firstRun = false;
+  function listenerFns(){
+    changed = false;
+    listenerFn(newValues, (!firstRun ? newValues : oldValues), self);
+    firstRun = true;
+  }
+
+  var destroyFns = _.map(watchFns, function(watchFn, i) {
+     return self.$watch(watchFn, function(newValue, oldValue) {
+       newValues[i] = newValue;
+       oldValues[i] = oldValue;
+
+       if (!changed) {
+        changed = true;
+        self.$evalAsync(listenerFns);
+       }
+     });
   });
 
+  return function(){
+    _.forEach(destroyFns, function(destroyFn) {
+      destroyFn();
+    });
+  }
 }
 
 module.exports = Scope;
