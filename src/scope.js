@@ -86,7 +86,7 @@ Scope.prototype.$$everyScope = function(fn){
 
 Scope.prototype.$$digestOnce = function(){
   var self = this;
-  var dirty = false;
+  var dirty;
   var continueLoop = true;
 
   this.$$everyScope(function(scope) {
@@ -114,7 +114,7 @@ Scope.prototype.$$digestOnce = function(){
       }
     });
 
-    return continueLoop = false;
+    return continueLoop;
   });
 
   return dirty;
