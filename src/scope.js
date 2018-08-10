@@ -12,6 +12,7 @@ function Scope() {
   this.$root = this;
   this.$$children = [];
   this.$parent = null;
+  this.$$listeners = {};
 }
 
 function initWatchFn(){}
@@ -271,7 +272,30 @@ Scope.prototype.$new = function(isolated, parent){
   child.$parent = parent;
   child.$$watchers = [];
   child.$$children = [];
+  child.$$listeners = {};
   return child;
+}
+
+Scope.prototype.$on = function(eventName, listenerFn) {
+  if (!this.$$listeners[eventName]) {
+    this.$$listeners[eventName] = [];
+  }
+  this.$$listeners[eventName].push(listenerFn);
+}
+
+Scope.prototype.$emit = function(eventName) {
+  this.$$fireEventOnScope(eventName);
+}
+
+Scope.prototype.$broadcast = function(eventName) {
+  this.$$fireEventOnScope(eventName);
+}
+
+Scope.prototype.$$fireEventOnScope = function(eventName) {
+  var listeners = this.$$listeners[eventName] || [];
+  listeners.forEach(function(listener) {
+    listener();
+  });
 }
 
 module.exports = Scope;
