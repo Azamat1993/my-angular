@@ -1379,5 +1379,63 @@ describe('Scope', function(){
         expect(nextListener).toHaveBeenCalled();
       });
     });
+
+    it('propagates up the scope hierarchy on $emit', function(){
+      var parentListener = jasmine.createSpy();
+      var scopeListener = jasmine.createSpy();
+
+      parent.$on('someEvent', parentListener);
+      scope.$on('someEvent', scopeListener);
+
+      scope.$emit('someEvent');
+
+      expect(parentListener).toHaveBeenCalled();
+      expect(scopeListener).toHaveBeenCalled();
+    });
+
+    it('propagates the same event up on $emit', function(){
+      var parentListener = jasmine.createSpy();
+      var scopeListener = jasmine.createSpy();
+
+      parent.$on('someEvent', parentListener);
+      scope.$on('someEvent', scopeListener);
+
+      scope.$emit('someEvent');
+
+      var scopeEvent = scopeListener.calls.mostRecent().args[0];
+      var parentEvent = parentListener.calls.mostRecent().args[0];
+
+      expect(scopeEvent).toBe(parentEvent);
+    });
+
+    it('propagates down the scope hierarchy on $broadcast', function(){
+      var scopeListener = jasmine.createSpy();
+      var childListener = jasmine.createSpy();
+      var isolatedChildListener = jasmine.createSpy();
+
+      scope.$on('someEvent', scopeListener);
+      child.$on('someEvent', childListener);
+      isolatedChild.$on('someEvent', isolatedChildListener);
+
+      scope.$broadcast('someEvent');
+
+      expect(scopeListener).toHaveBeenCalled();
+      expect(childListener).toHaveBeenCalled();
+      expect(isolatedChildListener).toHaveBeenCalled();
+    });
+
+    it('propagates the same event down on $broadcast', function(){
+      var scopeListener = jasmine.createSpy();
+      var childListener = jasmine.createSpy();
+
+      scope.$on('someEvent', scopeListener);
+      child.$on('someEvent', childListener);
+
+      scope.$broadcast('someEvent');
+
+      var scopeEvent = scopeListener.calls.mostRecent().args[0];
+      var childEvent = childListener.calls.mostRecent().args[0];
+      expect(scopeEvent).toBe(childEvent);
+    });
   });
 });
