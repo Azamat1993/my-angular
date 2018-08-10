@@ -277,25 +277,51 @@ Scope.prototype.$new = function(isolated, parent){
 }
 
 Scope.prototype.$on = function(eventName, listenerFn) {
+  var self = this;
   if (!this.$$listeners[eventName]) {
     this.$$listeners[eventName] = [];
   }
   this.$$listeners[eventName].push(listenerFn);
+
+  return function(){
+    var index = self.$$listeners[eventName].indexOf(listenerFn);
+
+    if (index >= 0) {
+      self.$$listeners[eventName][index] = null;
+    }
+  }
 }
 
 Scope.prototype.$emit = function(eventName) {
-  this.$$fireEventOnScope(eventName);
+  return this.$$fireEventOnScope(eventName, this.$$getRest(arguments));
 }
 
 Scope.prototype.$broadcast = function(eventName) {
-  this.$$fireEventOnScope(eventName);
+  return this.$$fireEventOnScope(eventName, this.$$getRest(arguments));
 }
 
-Scope.prototype.$$fireEventOnScope = function(eventName) {
+Scope.prototype.$$getRest = function(args) {
+  return Array.prototype.splice.call(args, 1);
+}
+
+Scope.prototype.$$fireEventOnScope = function(eventName, args) {
+  var event = {name: eventName};
   var listeners = this.$$listeners[eventName] || [];
-  listeners.forEach(function(listener) {
-    listener();
-  });
+  var listenerArgs = [event].concat(args);
+  var i = 0;
+
+  while (i < listeners.length) {
+    var listener = listeners[i];
+
+    if (listener === null) {
+      listeners.splice(i, 1);
+    } else {
+      listener.apply(null, listenerArgs);
+      i++;
+    }
+  }
+
+  return event;
 }
 
 module.exports = Scope;
