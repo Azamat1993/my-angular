@@ -350,7 +350,12 @@ Scope.prototype.$$fireFromEvent = function(eventName, listenerArgs) {
     if (listeners[i] === null) {
       this.$$listeners[eventName].splice(i, 1);
     } else {
-      listeners[i++].apply(null, listenerArgs);
+      try {
+        listeners[i].apply(null, listenerArgs);
+      } catch (e) {
+        console.error(e);
+      }
+      i++;
     }
   }
 }
