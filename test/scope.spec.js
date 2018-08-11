@@ -1560,5 +1560,34 @@ describe('Scope', function(){
 
       expect(listener2).toHaveBeenCalled();
     });
+
+    it('fires $destroy when destroyed', function(){
+      var listener = jasmine.createSpy();
+      scope.$on('$destroy', listener);
+
+      scope.$destroy();
+
+      expect(listener).toHaveBeenCalled();
+    });
+
+    it('fires $destroy on children destroyed', function(){
+      var listener = jasmine.createSpy();
+      child.$on('$destroy', listener);
+
+      scope.$destroy();
+
+      expect(listener).toHaveBeenCalled();
+    });
+
+    it('no longer calls listeners after destroyed', function(){
+      var listener = jasmine.createSpy();
+      scope.$on('someEvent', listener);
+
+      scope.$destroy();
+
+      scope.$emit('someEvent');
+
+      expect(listener).not.toHaveBeenCalled();
+    });
   });
 });

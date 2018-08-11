@@ -244,6 +244,7 @@ Scope.prototype.$watchGroup = function(watchFns, listenerFn) {
 }
 
 Scope.prototype.$destroy = function(){
+  this.$broadcast('$destroy');
   if (this.$parent) {
     var index = this.$parent.$$children.indexOf(this);
     if (index >= 0) {
@@ -251,6 +252,7 @@ Scope.prototype.$destroy = function(){
     }
   }
   this.$$watchers = null;
+  this.$$listeners = {};
 }
 
 Scope.prototype.$new = function(isolated, parent){
