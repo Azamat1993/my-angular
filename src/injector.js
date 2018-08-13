@@ -26,6 +26,10 @@ function createInjector(modulesToLoad) {
     return fn.apply(context, args);
   }
 
+  function annotate(fn) {
+    return fn.$inject;
+  }
+
   _.forEach(modulesToLoad, function loadModules(moduleName) {
     if (!modules.hasOwnProperty(moduleName)) {
       modules[moduleName] = true;
@@ -45,7 +49,8 @@ function createInjector(modulesToLoad) {
     get: function(name) {
       return cache[name];
     },
-    invoke: invoke
+    invoke: invoke,
+    annotate: annotate
   };
 }
 
