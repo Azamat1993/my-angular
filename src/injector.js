@@ -12,9 +12,12 @@ function createInjector(modulesToLoad) {
     }
   };
 
-  function invoke(fn, context) {
+  function invoke(fn, context, mapper) {
+    mapper = mapper || {};
     var args = _.map(fn.$inject, function(injectArg) {
-      if (_.isString(injectArg) && cache[injectArg]) {
+      if (mapper.hasOwnProperty(injectArg)) {
+        return mapper[injectArg];
+      } else if (_.isString(injectArg)) {
         return cache[injectArg];
       } else {
         throw 'Incorrect type';
