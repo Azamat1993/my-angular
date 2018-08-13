@@ -12,6 +12,17 @@ function createInjector(modulesToLoad) {
     }
   };
 
+  function invoke(fn, context) {
+    var args = _.map(fn.$inject, function(injectArg) {
+      if (_.isString(injectArg) && cache[injectArg]) {
+        return cache[injectArg];
+      } else {
+        throw 'Incorrect type';
+      }
+    });
+    return fn.apply(context, args);
+  }
+
   _.forEach(modulesToLoad, function loadModules(moduleName) {
     if (!modules.hasOwnProperty(moduleName)) {
       modules[moduleName] = true;
@@ -30,7 +41,8 @@ function createInjector(modulesToLoad) {
     },
     get: function(name) {
       return cache[name];
-    }
+    },
+    invoke: invoke
   };
 }
 
