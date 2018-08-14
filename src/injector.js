@@ -1,6 +1,7 @@
 var _ = require('lodash');
 
-var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]*)\)/m;
+var FN_ARGS = /^function\s*[^\[]*\(\s*([^\]]*)\)/m
+var FN_ARG = /^\s*(\S+)\s*/;
 
 function createInjector(modulesToLoad) {
   var cache = {};
@@ -16,7 +17,7 @@ function createInjector(modulesToLoad) {
 
   function invoke(fn, context, mapper) {
     mapper = mapper || {};
-    var args = _.map(fn.$inject, function(injectArg) {
+    var args = _.map(annotate(fn), function(injectArg) {
       if (mapper.hasOwnProperty(injectArg)) {
         return mapper[injectArg];
       } else if (_.isString(injectArg)) {
@@ -25,6 +26,11 @@ function createInjector(modulesToLoad) {
         throw 'Incorrect type';
       }
     });
+
+    if(_.isArray(fn)) {
+      fn = _.last(fn);
+    }
+
     return fn.apply(context, args);
   }
 
@@ -37,7 +43,9 @@ function createInjector(modulesToLoad) {
       return [];
     } else {
       var argDeclaration = fn.toString().match(FN_ARGS);
-      return argDeclaration[1].split(',');
+      return _.map(argDeclaration[1].split(','), function(arg) {
+        return arg.match(FN_ARG)[1];
+      });
     }
   }
 
