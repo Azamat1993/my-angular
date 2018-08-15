@@ -26,13 +26,19 @@ var setupModuleLoader = function(window) {
 
     var invokeQueue = [];
 
+    var invokeLater = function(method) {
+      return function() {
+        invokeQueue.push([method, arguments]);
+        return moduleInstance;
+      }
+    }
+
     var moduleInstance = {
       name: name,
       requires: requires,
-      constant: function(key, value) {
-        invokeQueue.push(['constant', [key, value]]);
-      },
-      _invokeQueue: invokeQueue
+      constant: invokeLater('constant'),
+      _invokeQueue: invokeQueue,
+      provider: invokeLater('provider')
     };
 
     modules[name] = moduleInstance;
