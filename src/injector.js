@@ -24,7 +24,9 @@ function createInjector(modulesToLoad) {
       return cache[name];
     } else if (providerCache.hasOwnProperty(name + 'Provider')) {
       var provider = providerCache[name + 'Provider'];
-      return invoke(provider.$get, provider);
+      var res = invoke(provider.$get);
+      cache[name] = res;
+      return res;
     }
   }
 
