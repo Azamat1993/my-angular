@@ -3,10 +3,13 @@ var _ = require('lodash');
 var FN_ARGS = /^function\s*[^\[]*\(\s*([^\]]*)\)/m
 var FN_ARG = /^\s*(\S+)\s*/;
 
+var INSTANTIATING = {};
+
 function createInjector(modulesToLoad) {
   var cache = {};
   var providerCache = {};
   var modules = {};
+  var path = [];
   var $provide = {
     constant: function(key, value) {
       if (key === 'hasOwnProperty') {
@@ -21,12 +24,25 @@ function createInjector(modulesToLoad) {
 
   function getService(name) {
     if (cache.hasOwnProperty(name)) {
+      if (cache[name] === INSTANTIATING) {
+        path.unshift(name);
+        throw new Error('Circular dependency found: ' + path.join(' <- '));
+      }
       return cache[name];
     } else if (providerCache.hasOwnProperty(name + 'Provider')) {
-      var provider = providerCache[name + 'Provider'];
-      var res = invoke(provider.$get);
-      cache[name] = res;
-      return res;
+      cache[name] = INSTANTIATING;
+      path.unshift(name);
+      try {
+        var provider = providerCache[name + 'Provider'];
+        var res = invoke(provider.$get);
+        cache[name] = res;
+        return res;
+      } finally {
+        path.shift();
+        if (cache[name] === INSTANTIATING) {
+          delete cache[name];
+        }
+      }
     }
   }
 
