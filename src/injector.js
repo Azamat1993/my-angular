@@ -1,6 +1,6 @@
 var _ = require('lodash');
 
-var FN_ARGS = /^function\s*[^\[]*\(\s*([^\]]*)\)/m
+var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]+)\)/m
 var FN_ARG = /^\s*(\S+)\s*/;
 
 var INSTANTIATING = {};
@@ -18,6 +18,9 @@ function createInjector(modulesToLoad) {
       cache[key] = value;
     },
     provider: function(key, provider) {
+      if (_.isFunction(provider)) {
+        provider = instantiate(provider);
+      }
       providerCache[key + 'Provider'] = provider;
     }
   };
