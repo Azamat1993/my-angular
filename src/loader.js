@@ -25,10 +25,13 @@ var setupModuleLoader = function(window) {
     }
 
     var invokeQueue = [];
+    var configBlocks = [];
 
-    var invokeLater = function(method, arrayMethod) {
+    var invokeLater = function(service, method, arrayMethod, queue) {
       return function() {
-        invokeQueue[arrayMethod || 'push']([method, arguments]);
+        queue = queue || invokeQueue;
+        var item = [service, method, arguments];
+        queue[arrayMethod || 'push'](item);
         return moduleInstance;
       }
     }
@@ -36,9 +39,11 @@ var setupModuleLoader = function(window) {
     var moduleInstance = {
       name: name,
       requires: requires,
-      constant: invokeLater('constant', 'unshift'),
+      constant: invokeLater('$provide', 'constant', 'unshift'),
       _invokeQueue: invokeQueue,
-      provider: invokeLater('provider')
+      provider: invokeLater('$provide', 'provider'),
+      config: invokeLater('$injector', 'invoke', 'push', configBlocks),
+      _configBlocks: configBlocks
     };
 
     modules[name] = moduleInstance;
