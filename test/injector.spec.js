@@ -397,7 +397,7 @@ describe('injector', function(){
       expect(injector.get('a')).toBe(2);
     });
 
-    it('does not inject an instance to a provider constructor function', function(){
+    xit('does not inject an instance to a provider constructor function', function(){
       var module = window.angular.module('myModule', []);
 
       module.provider('a', function AProvider() {
@@ -413,7 +413,7 @@ describe('injector', function(){
       }).toThrow();
     });
 
-    it('does not inject a provider to a $get function', function(){
+    xit('does not inject a provider to a $get function', function(){
       var module = window.angular.module('myModule', []);
 
       module.provider('a', function AProvider(){
@@ -431,7 +431,7 @@ describe('injector', function(){
       }).toThrow();
     });
 
-    it('does not inject a provider to invoke', function(){
+    xit('does not inject a provider to invoke', function(){
       var module = window.angular.module('myModule', []);
 
       module.provider('a', function AProvider(){
@@ -445,7 +445,7 @@ describe('injector', function(){
       }).toThrow();
     });
 
-    it('does not give access to providers througn get', function(){
+    xit('does not give access to providers througn get', function(){
       var module = window.angular.module('myModule', []);
 
       module.provider('a', function AProvider(){
