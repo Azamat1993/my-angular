@@ -19,7 +19,8 @@ function createInjector(modulesToLoad) {
 
   var modules = {};
   var path = [];
-  var $provide = {
+
+  providerCache.$provide = {
     constant: function(key, value) {
       if (key === 'hasOwnProperty') {
         throw 'Cannot have such a name';
@@ -33,7 +34,7 @@ function createInjector(modulesToLoad) {
       }
       providerCache[key + 'Provider'] = provider;
     }
-  };
+  }
 
   function createInternalInjector(cache, factoryFn) {
     function getService(name) {
@@ -119,7 +120,7 @@ function createInjector(modulesToLoad) {
       _.forEach(module._invokeQueue, function(invokeArgs) {
         var method = invokeArgs[0];
         var args = invokeArgs[1];
-        $provide[method].apply($provide, args);
+        providerCache.$provide[method].apply(providerCache.$provide, args);
       });
     }
   });
