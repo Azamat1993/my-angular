@@ -6,8 +6,17 @@ var FN_ARG = /^\s*(\S+)\s*/;
 var INSTANTIATING = {};
 
 function createInjector(modulesToLoad) {
-  var cache = {};
   var providerCache = {};
+  var providerInjector = createInternalInjector(providerCache, function(){
+    throw 'Unknown provider: ' + path.join(' <- ');
+  });
+
+  var instanceCache = {};
+  var instanceInjector = createInternalInjector(instanceCache, function(name){
+    var provider = providerInjector.get(name + 'Provider');
+    return instanceInjector.invoke(provider.$get, provider);
+  });
+
   var modules = {};
   var path = [];
   var $provide = {
@@ -15,59 +24,76 @@ function createInjector(modulesToLoad) {
       if (key === 'hasOwnProperty') {
         throw 'Cannot have such a name';
       }
-      cache[key] = value;
+      instanceCache[key] = value;
+      providerCache[key] = value;
     },
     provider: function(key, provider) {
       if (_.isFunction(provider)) {
-        provider = instantiate(provider);
+        provider = providerInjector.instantiate(provider);
       }
       providerCache[key + 'Provider'] = provider;
     }
   };
 
-  function getService(name) {
-    if (cache.hasOwnProperty(name)) {
-      if (cache[name] === INSTANTIATING) {
-        path.unshift(name);
-        throw new Error('Circular dependency found: ' + path.join(' <- '));
-      }
-      return cache[name];
-    } else if(providerCache.hasOwnProperty(name)) {
-      return providerCache[name];
-    } else if (providerCache.hasOwnProperty(name + 'Provider')) {
-      cache[name] = INSTANTIATING;
-      path.unshift(name);
-      try {
-        var provider = providerCache[name + 'Provider'];
-        var res = invoke(provider.$get);
-        cache[name] = res;
-        return res;
-      } finally {
-        path.shift();
+  function createInternalInjector(cache, factoryFn) {
+    function getService(name) {
+      if (cache.hasOwnProperty(name)) {
         if (cache[name] === INSTANTIATING) {
-          delete cache[name];
+          throw  new Error('Circular dependency found: ' + name + ' <- ' + path.join(' <- '))
+        }
+        return cache[name];
+      } else {
+        path.unshift(name);
+        cache[name] = INSTANTIATING;
+
+        try {
+          cache[name] = factoryFn(name);
+          return cache[name];
+        } finally {
+          path.shift();
+          if (cache[name] === INSTANTIATING) {
+            delete cache[name];
+          }
         }
       }
     }
-  }
 
-  function invoke(fn, context, mapper) {
-    mapper = mapper || {};
-    var args = _.map(annotate(fn), function(injectArg) {
-      if (mapper.hasOwnProperty(injectArg)) {
-        return mapper[injectArg];
-      } else if (_.isString(injectArg)) {
-        return getService(injectArg);
-      } else {
-        throw 'Incorrect type';
+    function invoke(fn, context, mapper) {
+      mapper = mapper || {};
+      var args = _.map(annotate(fn), function(injectArg) {
+        if (mapper.hasOwnProperty(injectArg)) {
+          return mapper[injectArg];
+        } else if (_.isString(injectArg)) {
+          return getService(injectArg);
+        } else {
+          throw 'Incorrect type';
+        }
+      });
+
+      if(_.isArray(fn)) {
+        fn = _.last(fn);
       }
-    });
 
-    if(_.isArray(fn)) {
-      fn = _.last(fn);
+      return fn.apply(context, args);
     }
 
-    return fn.apply(context, args);
+    function instantiate(fn, locals) {
+      var UnwrappedType = _.isArray(fn) ? _.last(fn) : fn;
+      var instance = Object.create(UnwrappedType.prototype);
+      invoke(fn, instance, locals);
+      return instance;
+    }
+
+    return {
+      has: function(key) {
+        return cache.hasOwnProperty(key)
+          || providerCache.hasOwnProperty(key + 'Provider');
+      },
+      get: getService,
+      invoke: invoke,
+      annotate: annotate,
+      instantiate: instantiate
+    };
   }
 
   function annotate(fn) {
@@ -85,13 +111,6 @@ function createInjector(modulesToLoad) {
     }
   }
 
-  function instantiate(fn, locals) {
-    var UnwrappedType = _.isArray(fn) ? _.last(fn) : fn;
-    var instance = Object.create(UnwrappedType.prototype);
-    invoke(fn, instance, locals);
-    return instance;
-  }
-
   _.forEach(modulesToLoad, function loadModules(moduleName) {
     if (!modules.hasOwnProperty(moduleName)) {
       modules[moduleName] = true;
@@ -104,16 +123,8 @@ function createInjector(modulesToLoad) {
       });
     }
   });
-  return {
-    has: function(key) {
-      return cache.hasOwnProperty(key)
-        || providerCache.hasOwnProperty(key + 'Provider');
-    },
-    get: getService,
-    invoke: invoke,
-    annotate: annotate,
-    instantiate: instantiate
-  };
+
+  return instanceInjector;
 }
 
 module.exports = createInjector;
