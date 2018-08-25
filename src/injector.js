@@ -17,6 +17,9 @@ function createInjector(modulesToLoad) {
     return instanceInjector.invoke(provider.$get, provider);
   });
 
+  instanceCache.$injector = instanceInjector;
+  providerCache.$injector = providerInjector;
+
   var modules = {};
   var path = [];
 

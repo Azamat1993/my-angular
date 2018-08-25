@@ -517,7 +517,7 @@ describe('injector', function(){
 
       var injector = createInjector(['myModule']);
 
-      expect(injector.get('b')).toBe(3);
+      expect(injector.get('a')).toBe(3);
     });
 
     it('does not allow injecting the $provide service to $get', function(){
