@@ -10,16 +10,16 @@ var setupModuleLoader = function(window) {
 
   ensure(angular, 'module', function(){
     var modules = {};
-    return function(name, requires) {
+    return function(name, requires, configFn) {
       if (requires) {
-        return createModule(name, requires, modules);
+        return createModule(name, requires, modules, configFn);
       } else {
         return getModule(name, modules);
       }
     };
   });
 
-  function createModule(name, requires, modules) {
+  function createModule(name, requires, modules, configFn) {
     if (name === 'hasOwnProperty') {
       throw 'cannot be hasOwnProperty name';
     }
@@ -43,8 +43,17 @@ var setupModuleLoader = function(window) {
       _invokeQueue: invokeQueue,
       provider: invokeLater('$provide', 'provider'),
       config: invokeLater('$injector', 'invoke', 'push', configBlocks),
-      _configBlocks: configBlocks
+      _configBlocks: configBlocks,
+      run: function(fn) {
+        moduleInstance._runBlocks.push(fn);
+        return moduleInstance;
+      },
+      _runBlocks: []
     };
+
+    if(configFn) {
+      moduleInstance.config(configFn);
+    }
 
     modules[name] = moduleInstance;
 
