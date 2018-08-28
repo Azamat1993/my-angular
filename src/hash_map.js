@@ -18,6 +18,26 @@ var hashKey = function(value) {
   return type + ':' + uid;
 }
 
+function HashMap() {
+}
+
+HashMap.prototype = {
+  put: function(key, value) {
+    this[hashKey(key)] = value;
+  },
+  get: function(key, value) {
+    return this[hashKey(key)];
+  },
+  remove: function(key) {
+    var value = this.get(key);
+    if (value) {
+      delete this[hashKey(key)];
+    }
+    return value;
+  }
+}
+
 module.exports = {
-  hashKey: hashKey
+  hashKey: hashKey,
+  HashMap: HashMap
 }
