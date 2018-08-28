@@ -126,18 +126,22 @@ function createInjector(modulesToLoad) {
   }
 
   var runBlocks = [];
-  _.forEach(modulesToLoad, function loadModules(moduleName) {
-    if (!modules.hasOwnProperty(moduleName)) {
-      modules[moduleName] = true;
-      var module = window.angular.module(moduleName);
-      _.forEach(module.requires, loadModules);
-      runInvokeQueue(module._invokeQueue);
-      runInvokeQueue(module._configBlocks);
-      runBlocks = runBlocks.concat(module._runBlocks);
+  _.forEach(modulesToLoad, function loadModules(module) {
+    if (_.isString(module)) {
+      if (!modules.hasOwnProperty(module)) {
+        modules[module] = true;
+        module = window.angular.module(module);
+        _.forEach(module.requires, loadModules);
+        runInvokeQueue(module._invokeQueue);
+        runInvokeQueue(module._configBlocks);
+        runBlocks = runBlocks.concat(module._runBlocks);
+      }
+    } else if (_.isFunction(module) || _.isArray(module)) {
+      runBlocks.push(providerInjector.invoke(module));
     }
   });
 
-  runBlocks.forEach(function(runBlock) {
+  _.forEach(_.compact(runBlocks), function(runBlock) {
     instanceInjector.invoke(runBlock);
   })
 
