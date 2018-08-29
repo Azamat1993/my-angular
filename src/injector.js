@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var HashMap = require('./hash_map').HashMap;
 
 var FN_ARGS = /^function\s*[^\(]*\(\s*([^\)]+)\)/m
 var FN_ARG = /^\s*(\S+)\s*/;
@@ -20,7 +21,7 @@ function createInjector(modulesToLoad) {
   instanceCache.$injector = instanceInjector;
   providerCache.$injector = providerInjector;
 
-  var modules = {};
+  var modules = new HashMap();
   var path = [];
 
   providerCache.$provide = {
@@ -127,17 +128,18 @@ function createInjector(modulesToLoad) {
 
   var runBlocks = [];
   _.forEach(modulesToLoad, function loadModules(module) {
-    if (_.isString(module)) {
-      if (!modules.hasOwnProperty(module)) {
+    if (!modules.get(module)) {
+      modules.put(module, true);
+      if (_.isString(module)) {
         modules[module] = true;
         module = window.angular.module(module);
         _.forEach(module.requires, loadModules);
         runInvokeQueue(module._invokeQueue);
         runInvokeQueue(module._configBlocks);
         runBlocks = runBlocks.concat(module._runBlocks);
+      } else if (_.isFunction(module) || _.isArray(module)) {
+        runBlocks.push(providerInjector.invoke(module));
       }
-    } else if (_.isFunction(module) || _.isArray(module)) {
-      runBlocks.push(providerInjector.invoke(module));
     }
   });
 
