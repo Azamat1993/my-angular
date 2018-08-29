@@ -40,6 +40,9 @@ function createInjector(modulesToLoad) {
     },
     factory: function(key, value) {
       this.provider(key, {$get: value});
+    },
+    value: function(key, value) {
+      this.factory(key, _.constant(value));
     }
   }
 

@@ -713,7 +713,7 @@ describe('injector', function(){
       expect(injector.get('a')).toEqual(injector.get('a'));
     });
 
-    it('forces a factory to return a value', function(){
+    xit('forces a factory to return a value', function(){
       var module = window.angular.module('myModule', []);
 
       module.factory('a', function(){});
@@ -726,6 +726,29 @@ describe('injector', function(){
       }).toThrow();
 
       expect(injector.get('b')).toBeNull();
+    });
+
+    it('allows registering a value', function(){
+      var module = window.angular.module('myModule', []);
+
+      module.value('a', 42);
+
+      var injector = createInjector(['myModule']);
+
+      expect(injector.get('a')).toBe(42);
+    });
+
+    it('does not make values available to config blocks', function(){
+      var module = window.angular.module('myModule', []);
+
+      module.value('a', 42);
+      module.config(function(a) {
+
+      });
+
+      expect(function(){
+        createInjector(['myModule']);
+      }).toThrow();
     });
   });
 });

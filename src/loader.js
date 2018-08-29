@@ -43,6 +43,7 @@ var setupModuleLoader = function(window) {
       _invokeQueue: invokeQueue,
       provider: invokeLater('$provide', 'provider'),
       config: invokeLater('$injector', 'invoke', 'push', configBlocks),
+      value: invokeLater('$provide', 'value'),
       _configBlocks: configBlocks,
       run: function(fn) {
         moduleInstance._runBlocks.push(fn);
