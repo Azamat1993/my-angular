@@ -48,7 +48,8 @@ var setupModuleLoader = function(window) {
         moduleInstance._runBlocks.push(fn);
         return moduleInstance;
       },
-      _runBlocks: []
+      _runBlocks: [],
+      factory: invokeLater('$provide', 'factory')
     };
 
     if(configFn) {
