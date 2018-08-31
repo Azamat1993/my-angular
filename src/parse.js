@@ -23,11 +23,11 @@ Lexer.prototype.lex = function(text) {
       this.readNumber();
     } else if (this.isWhitespace(this.ch)) {
       this.index++;
-    } else if(this.ch === '\'' || this.ch === '"') {
+    } else if(this.is('\'"')) {
       this.readString(this.ch);
     } else if(this.isIdent(this.ch)) {
       this.readIdent();
-    } else if (this.ch === '[' || this.ch === ']' || this.ch === ',') {
+    } else if (this.is('[]{},:')) {
       this.tokens.push({
         text: this.ch
       });
@@ -94,6 +94,10 @@ Lexer.prototype.isNumber = function(ch) {
   return '0' <= ch && ch <= '9';
 }
 
+Lexer.prototype.is = function(letters) {
+  return letters.indexOf(this.ch) >= 0;
+}
+
 Lexer.prototype.readNumber = function() {
   var number = '';
   while (this.index < this.text.length) {
@@ -118,6 +122,8 @@ function AST(lexer) {
 AST.Program = 'Program';
 AST.Literal = 'Literal';
 AST.ArrayExpression = 'ArrayExpression';
+AST.ObjectExpression = 'ObjectExpression';
+AST.Property = 'Property';
 
 AST.prototype.constants = {
   'null' : {type: AST.Literal, value: null},
@@ -137,11 +143,28 @@ AST.prototype.program = function(){
 AST.prototype.primary = function(){
   if (this.expect('[')) {
     return this.arrayDeclaration();
+  } else if(this.expect('{')) {
+    return this.object();
   } else if (this.constants.hasOwnProperty(this.tokens[0].text)) {
     return this.constants[this.consume().text];
   } else {
     return this.constant();
   }
+}
+
+AST.prototype.object = function(){
+  var properties = [];
+  if(!this.peek('}')) {
+    do {
+      var property = {type: AST.Property};
+      property.key = this.constant();
+      this.consume(':');
+      property.value = this.primary();
+      properties.push(property);
+    } while (this.expect(','))
+  }
+  this.consume('}');
+  return {type: AST.ObjectExpression, properties: properties};
 }
 
 AST.prototype.expect = function(e) {
@@ -210,6 +233,13 @@ ASTCompiler.prototype.recurse = function(ast) {
         return this.recurse(element);
       }.bind(this));
       return '[' + elements.join(',') + ']';
+    case AST.ObjectExpression:
+      var properties = _.map(ast.properties, function(property) {
+        var key = this.escape(property.key.value);
+        var value = this.recurse(property.value);
+        return key + ':' + value;
+      }.bind(this));
+      return '{' + properties.join(',') + '}';
   }
 }
 
