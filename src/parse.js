@@ -253,7 +253,6 @@ ASTCompiler.prototype.recurse = function(ast) {
         var value = this.recurse(property.value);
         return key + ':' + value;
       }.bind(this));
-      console.log('{' + properties.join(',') + '}');
       return '{' + properties.join(',') + '}';
   }
 }
