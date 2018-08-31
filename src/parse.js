@@ -27,7 +27,7 @@ Lexer.prototype.lex = function(text) {
       this.readString(this.ch);
     } else if(this.isIdent(this.ch)) {
       this.readIdent();
-    } else if (this.is('[]{},:')) {
+    } else if (this.is('[]{},:.')) {
       this.tokens.push({
         text: this.ch
       });
@@ -129,11 +129,13 @@ AST.ArrayExpression = 'ArrayExpression';
 AST.ObjectExpression = 'ObjectExpression';
 AST.Property = 'Property';
 AST.Identifier = 'Identifier';
+AST.ThisExpression = 'ThisExpression';
 
 AST.prototype.constants = {
   'null' : {type: AST.Literal, value: null},
   'true' : {type: AST.Literal, value: true},
-  'false': {type: AST.Literal, value: false}
+  'false': {type: AST.Literal, value: false},
+  'this': {type: AST.ThisExpression}
 }
 
 AST.prototype.ast = function(text) {
@@ -269,6 +271,8 @@ ASTCompiler.prototype.recurse = function(ast) {
       var intoId = this.nextId();
       this.if_('s',this.assign(intoId, this.nonComputerMember('s', ast.name)));
       return intoId;
+    case AST.ThisExpression:
+      return 's';
   }
 }
 ASTCompiler.prototype.assign = function(id, value) {
