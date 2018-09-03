@@ -248,7 +248,7 @@ ASTCompiler.prototype.compile = function(text) {
   this.state = {body: [], nextId: 0, vars: []};
   this.recurse(ast);
 
-  return new Function('s',
+  return new Function('s', 'l',
     (this.state.vars.length ?
       'var ' + this.state.vars.join(',') + ';' : '') +
       this.state.body.join(''));
@@ -282,7 +282,8 @@ ASTCompiler.prototype.recurse = function(ast) {
       return '{' + properties.join(',') + '}';
     case AST.Identifier:
       intoId = this.nextId();
-      this.if_('s',this.assign(intoId, this.nonComputerMember('s', ast.name)));
+      this.if_('l', this.assign(intoId, this.nonComputerMember('l', ast.name)));
+      this.if_(this.not('l') + ' && s',this.assign(intoId, this.nonComputerMember('s', ast.name)));
       return intoId;
     case AST.ThisExpression:
       return 's';
@@ -294,6 +295,11 @@ ASTCompiler.prototype.recurse = function(ast) {
       return intoId;
   }
 }
+
+ASTCompiler.prototype.not = function(e) {
+  return '!(' + e + ')';
+}
+
 ASTCompiler.prototype.assign = function(id, value) {
   return id + '=' + value;
 }
