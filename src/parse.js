@@ -282,8 +282,9 @@ ASTCompiler.prototype.recurse = function(ast) {
       return '{' + properties.join(',') + '}';
     case AST.Identifier:
       intoId = this.nextId();
-      this.if_('l', this.assign(intoId, this.nonComputerMember('l', ast.name)));
-      this.if_(this.not('l') + ' && s',this.assign(intoId, this.nonComputerMember('s', ast.name)));
+      this.if_(this.getHasOwnProperty('l', ast.name),
+        this.assign(intoId, this.nonComputerMember('l', ast.name)));
+      this.if_(this.not(this.getHasOwnProperty('l', ast.name)) + ' && s',this.assign(intoId, this.nonComputerMember('s', ast.name)));
       return intoId;
     case AST.ThisExpression:
       return 's';
@@ -294,6 +295,10 @@ ASTCompiler.prototype.recurse = function(ast) {
         this.assign(intoId, this.nonComputerMember(left, ast.property.name)));
       return intoId;
   }
+}
+
+ASTCompiler.prototype.getHasOwnProperty = function(obj, attr) {
+  return obj + ' && ( ' + this.escape(attr) + ' in ' + obj + ')';
 }
 
 ASTCompiler.prototype.not = function(e) {
