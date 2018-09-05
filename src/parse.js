@@ -27,7 +27,7 @@ Lexer.prototype.lex = function(text) {
       this.readString(this.ch);
     } else if(this.isIdent(this.ch)) {
       this.readIdent();
-    } else if (this.is('[]{},:.')) {
+    } else if (this.is('[]{},:.()')) {
       this.tokens.push({
         text: this.ch
       });
