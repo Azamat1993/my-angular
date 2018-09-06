@@ -284,7 +284,6 @@ ASTCompiler.prototype.compile = function(text) {
     (this.state.vars.length ?
       'var ' + this.state.vars.join(',') + ';' : '') +
       this.state.body.join(''));
-  console.log(ast.body.callee);
   return fn;
 }
 
@@ -319,6 +318,13 @@ ASTCompiler.prototype.recurse = function(ast, context) {
       this.if_(this.getHasOwnProperty('l', ast.name),
         this.assign(intoId, this.nonComputerMember('l', ast.name)));
       this.if_(this.not(this.getHasOwnProperty('l', ast.name)) + ' && s',this.assign(intoId, this.nonComputerMember('s', ast.name)));
+
+      if (context) {
+        context.context = this.getHasOwnProperty('l', ast.name) + '?l:s';
+        context.name = ast.name;
+        context.computed = false;
+      }
+
       return intoId;
     case AST.ThisExpression:
       return 's';
@@ -346,7 +352,6 @@ ASTCompiler.prototype.recurse = function(ast, context) {
           context.computed = false;
         }
       }
-      console.log(context)
       return intoId;
     case AST.CallExpression:
       var callContext = {};
@@ -361,6 +366,8 @@ ASTCompiler.prototype.recurse = function(ast, context) {
         } else {
           callee = this.nonComputerMember(callContext.context, callContext.name);
         }
+      } else {
+
       }
       return callee + ' && ' + callee + '('+args.join(',')+')';
   }
