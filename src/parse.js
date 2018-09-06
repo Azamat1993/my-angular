@@ -182,12 +182,27 @@ AST.prototype.primary = function(){
         computed: false
       }
     } else if (next.text  === '(') {
-      primary = {type: AST.CallExpression, callee: primary};
+      primary = {
+        type: AST.CallExpression,
+        callee: primary,
+        arguments: this.parseArguments()
+      };
       this.consume(')');
     }
   }
 
   return primary;
+}
+
+AST.prototype.parseArguments = function() {
+  var args = [];
+  if (!this.peek(')')) {
+    do {
+      args.push(this.primary());
+    } while (this.expect(','));
+  }
+
+  return args;
 }
 
 AST.prototype.object = function(){
@@ -321,7 +336,10 @@ ASTCompiler.prototype.recurse = function(ast) {
       return intoId;
     case AST.CallExpression:
       var callee = this.recurse(ast.callee);
-      return callee + ' && ' + callee + '()';
+      var args = _.map(ast.arguments, function(arg) {
+        return this.recurse(arg);
+      }.bind(this));
+      return callee + ' && ' + callee + '('+args.join(',')+')';
   }
 }
 
