@@ -162,11 +162,24 @@ AST.prototype.primary = function(){
     primary = this.constant();
   }
 
-  while (this.expect('.')) {
-    primary = {
-      type: AST.MemberExpression,
-      object: primary,
-      property: this.identifier()
+  var next;
+
+  while ((next = this.expect('.')) || (next = this.expect('['))) {
+    if (next.text === '[') {
+      primary = {
+        type: AST.MemberExpression,
+        object: primary,
+        property: this.primary(),
+        computed: true
+      }
+      this.consume(']');
+    } else {
+      primary = {
+        type: AST.MemberExpression,
+        object: primary,
+        property: this.identifier(),
+        computed: false
+      }
     }
   }
 
@@ -291,10 +304,20 @@ ASTCompiler.prototype.recurse = function(ast) {
     case AST.MemberExpression:
       intoId = this.nextId();
       var left = this.recurse(ast.object);
-      this.if_(left,
-        this.assign(intoId, this.nonComputerMember(left, ast.property.name)));
+      if (ast.computed) {
+        var right = this.recurse(ast.property);
+        this.if_(left,
+          this.assign(intoId, this.computedMember(left, right)));
+      } else {
+        this.if_(left,
+          this.assign(intoId, this.nonComputerMember(left, ast.property.name)));
+      }
       return intoId;
   }
+}
+
+ASTCompiler.prototype.computedMember = function(left, right) {
+  return '('+left+')['+right+']';
 }
 
 ASTCompiler.prototype.getHasOwnProperty = function(obj, attr) {
