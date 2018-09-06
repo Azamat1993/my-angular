@@ -180,5 +180,31 @@ describe('parse', function(){
       argFn: _.constant(2),
       aFunction: function(a1, a2, a3) { return a1+a2+a3;}
     })).toBe(42);
-  })
+  });
+
+  it('calls methods accessed as computed properties', function(){
+    var scope = {
+      anObject: {
+        aMember: 42,
+        aFunction: function() {
+          return this.aMember;
+        }
+      }
+    }
+    var fn = parse('anObject["aFunction"]()');
+    expect(fn(scope)).toBe(42);
+  });
+
+  fit('calls methods access as non-computed properties', function(){
+    var scope = {
+      anObject: {
+        aMember: 42,
+        aFunction: function() {
+          return this.aMember;
+        }
+      }
+    }
+    var fn = parse('anObject.aFunction()');
+    expect(fn(scope)).toBe(42);
+  });
 });
