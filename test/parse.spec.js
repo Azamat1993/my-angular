@@ -147,8 +147,8 @@ describe('parse', function(){
     expect(fn({key: 'theKey', lock: {theKey: 42}})).toBe(42);
   });
 
-  xit('parses a function call', function(){
+  fit('parses a function call', function(){
     var fn = parse('aFunction()');
-    expect(fn({aFunction: function() {42}})).toBe(42);
+    expect(fn({aFunction: function() {return 42}})).toBe(42);
   });
 });
