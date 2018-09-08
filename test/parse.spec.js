@@ -264,5 +264,5 @@ describe('parse', function(){
     var scope = {anArray: [{}]};
     fn(scope);
     expect(scope.anArray[0].anAttribute).toBe(42);
-  });
+  })
 });
