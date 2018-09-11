@@ -385,7 +385,6 @@ ASTCompiler.prototype.recurse = function(ast, context) {
       }
       return callee + ' && ' + callee + '('+args.join(',')+')';
     case AST.AssignmentExpression:
-      console.log(ast);
       var leftContext = {};
       this.recurse(ast.left, leftContext);
       var leftExpr;
