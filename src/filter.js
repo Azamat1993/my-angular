@@ -1,22 +1,23 @@
 var _ = require('lodash');
 
-var filters = {};
+function $FilterProvider() {
+  var filters = {};
 
-function register(name, factoryFn) {
-  if (_.isObject(name)) {
-    return _.map(name, function(factory, name) {
-      return register(name, factory);
-    })
-  } else {
-    return filters[name] = factoryFn();  
+  this.register = function(name, factoryFn) {
+    if (_.isObject(name)) {
+      return _.map(name, function(factory, name) {
+        return this.register(name, factory);
+      }.bind(this))
+    } else {
+      return filters[name] = factoryFn();
+    }
+  }
+
+  this.$get = function() {
+    return function filter(name) {
+      return filters[name];
+    }
   }
 }
 
-function filter(name) {
-  return filters[name];
-}
-
-module.exports = {
-  register: register,
-  filter: filter
-}
+module.exports = $FilterProvider
