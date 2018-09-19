@@ -12,8 +12,9 @@ function $QProvider() {
     function processQueue(state) {
       var pending = state.pending;
       delete state.pending;
-      _.forEach(pending,function(cb) {
-        cb(state.value);
+      _.forEach(pending,function(handlers) {
+        var fn = handlers[state.status];
+        fn(state.value);
       })
     }
 
@@ -21,9 +22,9 @@ function $QProvider() {
       this.$$state = {};
     }
 
-    Promise.prototype.then = function(onFulFilled) {
+    Promise.prototype.then = function(onFulFilled, onRejected) {
       this.$$state.pending = this.$$state.pending || [];
-      this.$$state.pending.push(onFulFilled);
+      this.$$state.pending.push([null, onFulFilled, onRejected]);
 
       if (this.$$state.status > 0) {
         scheduleProcessQueue(this.$$state);
@@ -40,6 +41,16 @@ function $QProvider() {
       }
       this.promise.$$state.value = val;
       this.promise.$$state.status = 1;
+      scheduleProcessQueue(this.promise.$$state);
+    }
+
+    Deferred.prototype.reject = function(reason) {
+      if (this.promise.$$state.status) {
+        return;
+      }
+      this.promise.$$state.value = reason;
+      this.promise.$$state.status = 2;
+
       scheduleProcessQueue(this.promise.$$state);
     }
 
