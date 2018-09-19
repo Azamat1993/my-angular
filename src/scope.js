@@ -67,6 +67,7 @@ function $RootScopeProvider() {
         while (this.$$asyncQueue.length) {
           try {
             var asyncTask = this.$$asyncQueue.shift();
+
             asyncTask.scope.$eval(asyncTask.expression);
           } catch (e) {
             console.error(e);
@@ -142,7 +143,7 @@ function $RootScopeProvider() {
     Scope.prototype.$apply = function(expr) {
       try {
         this.$beginPhase('$apply');
-        this.$eval(expr);
+        this.$eval(expr || function(){});
       } finally {
         this.$clearPhase();
         this.$root.$digest();

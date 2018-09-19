@@ -2,11 +2,13 @@ var publishExternalAPI = require('../src/angular_public');
 var createInjector = require('../src/injector');
 
 describe('q', function(){
-  var $q;
+  var $q, $rootScope;
 
   beforeEach(function(){
     publishExternalAPI();
-    $q = createInjector(['ng']).get('$q');
+    var injector = createInjector(['ng']);
+    $q = injector.get('$q');
+    $rootScope = injector.get('$rootScope');
   });
 
   it('can create a deferred', function(){
@@ -35,7 +37,7 @@ describe('q', function(){
     }, 1)
   });
 
-  it('works when resolved before promise listener', function(){
+  it('works when resolved before promise listener', function(done){
     var d = $q.defer();
     d.resolve(42);
 
@@ -57,5 +59,103 @@ describe('q', function(){
     d.resolve(42);
 
     expect(promiseSpy).not.toHaveBeenCalled();
+  });
+
+  it('resolves promise at next digest', function(){
+    var d = $q.defer();
+
+    var promiseSpy = jasmine.createSpy();
+    d.promise.then(promiseSpy);
+
+    d.resolve(42);
+    $rootScope.$apply(function(){});
+
+    expect(promiseSpy).toHaveBeenCalledWith(42);
+  });
+
+  it('may only be resolved once', function(){
+    var d = $q.defer();
+
+    var promiseSpy = jasmine.createSpy();
+
+    d.promise.then(promiseSpy);
+
+    d.resolve(42);
+    d.resolve(43);
+
+    $rootScope.$apply();
+
+    expect(promiseSpy.calls.count()).toEqual(1);
+    expect(promiseSpy).toHaveBeenCalledWith(42);
+  });
+
+  it('may only ever be resolved once', function(){
+    var d = $q.defer();
+
+    var promiseSpy = jasmine.createSpy();
+
+    d.promise.then(promiseSpy);
+
+    d.resolve(42);
+    $rootScope.$apply();
+
+    expect(promiseSpy).toHaveBeenCalledWith(42);
+
+    d.resolve(43);
+    $rootScope.$apply();
+    expect(promiseSpy.calls.count()).toBe(1);
+  });
+
+  it('resolves a listener added after resolution', function(){
+    var d = $q.defer();
+
+    d.resolve(42);
+    $rootScope.$apply();
+
+    var promiseSpy = jasmine.createSpy();
+    d.promise.then(promiseSpy);
+    $rootScope.$apply();
+
+    expect(promiseSpy).toHaveBeenCalledWith(42);
+  });
+
+  it('may have multiple callbacks', function(){
+    var d = $q.defer();
+
+    var firstSpy = jasmine.createSpy();
+    var secondSpy = jasmine.createSpy();
+
+    d.promise.then(firstSpy);
+    d.promise.then(secondSpy);
+
+    d.resolve(42);
+
+    $rootScope.$apply();
+
+    expect(firstSpy).toHaveBeenCalledWith(42);
+    expect(secondSpy).toHaveBeenCalledWith(42);
+  });
+
+  it('invokes callbacks once', function() {
+    var d = $q.defer();
+
+    var firstSpy = jasmine.createSpy();
+    var secondSpy = jasmine.createSpy();
+
+    d.promise.then(firstSpy);
+    d.resolve(42);
+    $rootScope.$apply();
+    expect(firstSpy.calls.count()).toBe(1);
+    expect(secondSpy.calls.count()).toBe(0);
+
+    d.promise.then(secondSpy);
+
+    expect(firstSpy.calls.count()).toBe(1);
+    expect(secondSpy.calls.count()).toBe(0);
+
+    $rootScope.$apply();
+
+    expect(firstSpy.calls.count()).toBe(1);
+    expect(secondSpy.calls.count()).toBe(1);
   });
 });
