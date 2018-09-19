@@ -206,4 +206,47 @@ describe('q', function(){
 
     expect(fulfillSpy).not.toHaveBeenCalled();
   });
+
+  it('does not require a failure handler each time', function(){
+    var d = $q.defer();
+
+    var fulfillSpy = jasmine.createSpy();
+    var rejectSpy = jasmine.createSpy();
+
+    d.promise.then(fulfillSpy);
+    d.promise.then(null, rejectSpy);
+
+    d.reject('fail');
+    $rootScope.$apply();
+
+    expect(rejectSpy).toHaveBeenCalledWith('fail');
+  });
+
+  it('does not require a success handler each time', function(){
+    var d = $q.defer();
+
+    var fulfillSpy = jasmine.createSpy();
+    var rejectSpy = jasmine.createSpy();
+
+    d.promise.then(fulfillSpy);
+    d.promise.then(null, rejectSpy);
+
+    d.resolve('ok');
+    $rootScope.$apply();
+
+    expect(fulfillSpy).toHaveBeenCalledWith('ok');
+  });
+
+  it('can register rejection handler with catch', function(){
+    var d = $q.defer();
+
+    var rejectSpy = jasmine.createSpy();
+    d.promise.catch(rejectSpy);
+    d.reject('fail');
+    $rootScope.$apply();
+
+    expect(rejectSpy).toHaveBeenCalled();
+  });
+
+
 });

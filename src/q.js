@@ -14,7 +14,9 @@ function $QProvider() {
       delete state.pending;
       _.forEach(pending,function(handlers) {
         var fn = handlers[state.status];
-        fn(state.value);
+        if (_.isFunction(fn)) {
+          fn(state.value);
+        }
       })
     }
 
@@ -29,6 +31,10 @@ function $QProvider() {
       if (this.$$state.status > 0) {
         scheduleProcessQueue(this.$$state);
       }
+    }
+
+    Promise.prototype.catch = function(onRejected) {
+      return this.then(null, onRejected);
     }
 
     function Deferred() {
