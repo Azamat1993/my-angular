@@ -88,6 +88,24 @@ describe('$compile', function(){
       $compile(el);
       expect(el.eq(0).data('hasCompiled')).toBe(1);
       expect(el.eq(1).data('hasCompiled')).toBe(2);
-    })
+    });
   });
+
+  it('compiles element directives from child elements', function(){
+    var idx = 1;
+    var injector = makeInjectorWithDirectives('myDirective', function(){
+      return {
+        compile: function(element) {
+          element.data('hasCompiled', idx++);
+        }
+      }
+    });
+
+    injector.invoke(function($compile) {
+      var el = $('<div><my-directive></my-directive></div>');
+      $compile(el);
+      expect(el.data('hasCompiled')).toBeUndefined();
+      expect(el.find('> my-directive').data('hasCompiled')).toBe(1);
+    });
+  })
 });
