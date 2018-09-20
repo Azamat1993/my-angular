@@ -65,9 +65,17 @@ function $QProvider() {
       if (this.promise.$$state.status) {
         return;
       }
-      this.promise.$$state.value = val;
-      this.promise.$$state.status = 1;
-      scheduleProcessQueue(this.promise.$$state);
+
+      if (val && _.isFunction(val.then)) {
+        val.then(
+          this.resolve.bind(this),
+          this.reject.bind(this)
+        );
+      } else {
+        this.promise.$$state.value = val;
+        this.promise.$$state.status = 1;
+        scheduleProcessQueue(this.promise.$$state);
+      }
     }
 
     Deferred.prototype.reject = function(reason) {
