@@ -57,6 +57,11 @@ function $CompilerProvider($provide) {
         var normalizedAttrName = _.camelCase(attr.name.toLowerCase());
         addDirective(directives, normalizedAttrName);
       });
+
+      _.forEach(node.classList, function(className) {
+        var normalizedClassName = _.camelCase(className.toLowerCase());
+        addDirective(directives, normalizedClassName);
+      });
       return directives;
     }
 
