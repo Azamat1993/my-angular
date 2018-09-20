@@ -1,12 +1,20 @@
 var _ = require('lodash');
 var publishExternalAPI = require('../src/angular_public');
 var createInjector = require('../src/injector');
+var $ = require('jquery');
 
 describe('$compile', function(){
   beforeEach(function(){
     delete window.angular;
     publishExternalAPI();
   });
+
+  function makeInjectorWithDirectives() {
+    var args = arguments;
+    return createInjector(['ng', function($compileProvider) {
+      $compileProvider.directive.apply($compileProvider, args);
+    }])
+  }
 
   it('allows creating directives', function(){
     var myModule = window.angular.module('myModule', []);
@@ -47,5 +55,39 @@ describe('$compile', function(){
     expect(injector.has('aDirective')).toBe(true);
     expect(injector.has('bDirective')).toBe(true);
     expect(injector.has('cDirective')).toBe(true);
+  });
+
+  it('compiles element directives from a single element', function(){
+    var injector = makeInjectorWithDirectives('myDirective', function(){
+      return {
+        compile: function(element) {
+          element.data('hasCompiled', true);
+        }
+      }
+    })
+
+    injector.invoke(function($compile) {
+      var el = $('<my-directive></my-directive>');
+      $compile(el);
+      expect(el.data('hasCompiled')).toBe(true);
+    });
+  });
+
+  it('compiles element directives found from several elements', function(){
+    var idx = 1;
+    var injector = makeInjectorWithDirectives('myDirective', function(){
+      return {
+        compile: function(element) {
+          element.data('hasCompiled', idx++);
+        }
+      }
+    });
+
+    injector.invoke(function($compile) {
+      var el = $('<my-directive></my-directive><my-directive></my-directive>');
+      $compile(el);
+      expect(el.eq(0).data('hasCompiled')).toBe(1);
+      expect(el.eq(1).data('hasCompiled')).toBe(2);
+    })
   });
 });
