@@ -50,7 +50,8 @@ var setupModuleLoader = function(window) {
         return moduleInstance;
       },
       _runBlocks: [],
-      factory: invokeLater('$provide', 'factory')
+      factory: invokeLater('$provide', 'factory'),
+      directive: invokeLater('$compileProvider', 'directive')
     };
 
     if(configFn) {
@@ -64,7 +65,7 @@ var setupModuleLoader = function(window) {
 
   function getModule(name, modules) {
     if (!modules.hasOwnProperty(name)) {
-      throw 'No such module';
+      throw 'No such module: ' + name;
     }
     return modules[name];
   }

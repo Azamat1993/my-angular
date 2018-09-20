@@ -7,6 +7,7 @@ function publishExternalAPI() {
   ngModule.provider('$filter', require('./filter'));
   ngModule.provider('$q', require('./q'));
   ngModule.provider('$rootScope', require('./scope'));
+  ngModule.provider('$compile', require('./compile'));
 }
 
 module.exports = publishExternalAPI;
