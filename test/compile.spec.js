@@ -465,6 +465,39 @@ describe('$compile', function(){
           expect(attrs.whatever).toEqual('');
         }
       )
-    })
+    });
+
+    it('allows setting attributes', function(){
+      registerAndCompile(
+        'myDirective',
+        '<my-directive attr="true"></my-directive>',
+        function(element, attrs) {
+          attrs.$set('attr', 'false');
+          expect(attrs.attr).toBe('false');
+        }
+      )
+    });
+
+    it('sets attributes to DOM', function(){
+      registerAndCompile(
+        'myDirective',
+        '<my-directive attr="true"></my-directive>',
+        function(element, attrs) {
+          attrs.$set('attr', 'false');
+          expect(element.attr('attr')).toEqual('false');
+        }
+      )
+    });
+
+    it('does not set attributes to DOM when flag is false', function(){
+      registerAndCompile(
+        'myDirective',
+        '<my-directive attr="true"></my-directive>',
+        function(element, attrs) {
+          attrs.$set('attr', 'false', false);
+          expect(element.attr('attr')).toEqual('true');
+        }
+      )
+    });
   });
 });
