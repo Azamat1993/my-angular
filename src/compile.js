@@ -38,15 +38,16 @@ function $CompilerProvider($provide) {
 
     function compileNodes($compileNodes) {
       _.forEach($compileNodes, function(node) {
-        var directives = collectDirectives(node);
-        var terminal = applyDirectivesToNode(directives, node);
+        var attrs = {};
+        var directives = collectDirectives(node, attrs);
+        var terminal = applyDirectivesToNode(directives, node, attrs);
         if (!terminal && node.childNodes && node.childNodes.length) {
           compileNodes(node.childNodes);
         }
       });
     }
 
-    function applyDirectivesToNode(directives, compileNode) {
+    function applyDirectivesToNode(directives, compileNode, attrs) {
       var $compileNode = $(compileNode);
       var terminalPriority = -Number.MAX_VALUE;
       var terminal = false;
@@ -56,7 +57,7 @@ function $CompilerProvider($provide) {
         }
 
         if (directive.compile) {
-          directive.compile($compileNode);
+          directive.compile($compileNode, attrs);
         }
         if (directive.terminal) {
           terminal = true;
@@ -67,13 +68,15 @@ function $CompilerProvider($provide) {
       return terminal;
     }
 
-    function collectDirectives(node) {
+    function collectDirectives(node, attrs) {
       var directives = [];
       var normalizedNodeName = _.camelCase(nodeName(node).toLowerCase());
       addDirective(directives, normalizedNodeName);
       _.forEach(node.attributes, function(attr) {
         var normalizedAttrName = _.camelCase(attr.name.toLowerCase());
         addDirective(directives, normalizedAttrName);
+
+        attrs[normalizedAttrName] = attr.value.trim();
       });
 
       _.forEach(node.classList, function(className) {
