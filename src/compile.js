@@ -2,6 +2,25 @@ var _ = require('lodash');
 var $ = require('jquery');
 function $CompilerProvider($provide) {
   var hasDirectives = {};
+  var BOOLEAN_ATTRS = {
+    multiple: true,
+    selected: true,
+    checked: true,
+    disabled: true,
+    readOnly: true,
+    required: true,
+    open: true
+  };
+
+  var BOOLEAN_ELEMENTS = {
+    INPUT: true,
+    SELECT: true,
+    OPTION: true,
+    TEXTAREA: true,
+    BUTTON: true, 
+    FORM: true,
+    DETAILS: true
+  };
 
   this.directive = function(name, directiveFactory) {
     if (_.isString(name)) {
@@ -77,6 +96,10 @@ function $CompilerProvider($provide) {
         addDirective(directives, normalizedAttrName);
 
         attrs[normalizedAttrName] = attr.value.trim();
+
+        if (isBooleanAttribute(node, normalizedAttrName)) {
+          attrs[normalizedAttrName] = true;
+        }
       });
 
       _.forEach(node.classList, function(className) {
@@ -86,6 +109,10 @@ function $CompilerProvider($provide) {
 
       directives.sort(byPriority);
       return directives;
+    }
+
+    function isBooleanAttribute(node, attrName) {
+      return BOOLEAN_ATTRS[attrName] && BOOLEAN_ELEMENTS[node.nodeName];
     }
 
     function byPriority(a, b) {

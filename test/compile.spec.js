@@ -395,6 +395,23 @@ describe('$compile', function(){
 
   describe('attributes', function(){
 
+    function registerAndCompile(dirName, domString, callback) {
+      var givenAttrs;
+      var injector = makeInjectorWithDirectives(dirName, function(){
+        return {
+          compile: function(element, attrs) {
+            givenAttrs = attrs;
+          }
+        }
+      });
+
+      injector.invoke(function($compile) {
+        var el = $(domString);
+        $compile(el);
+        callback(el, givenAttrs);
+      })
+    }
+
     it('passes the element attributes to the compile function', function(){
       var injector = makeInjectorWithDirectives('myDirective', function(){
         return {
@@ -428,6 +445,26 @@ describe('$compile', function(){
 
         expect(el.data('givenAttrs').myAttr).toEqual('val');
       });
+    });
+
+    it('sets the value of boolean attributes to true', function(){
+      registerAndCompile(
+        'myDirective',
+        '<input my-directive disabled>',
+        function(element, attrs) {
+          expect(attrs.disabled).toBe(true);
+        }
+      )
+    });
+
+    it('does not set the value of custom boolean attributes to true', function(){
+      registerAndCompile(
+        'myDirective',
+        '<input my-directive whatever>',
+        function(element, attrs) {
+          expect(attrs.whatever).toEqual('');
+        }
+      )
     })
   });
 });
