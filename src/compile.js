@@ -17,7 +17,7 @@ function $CompilerProvider($provide) {
     SELECT: true,
     OPTION: true,
     TEXTAREA: true,
-    BUTTON: true, 
+    BUTTON: true,
     FORM: true,
     DETAILS: true
   };
