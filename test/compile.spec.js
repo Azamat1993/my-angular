@@ -499,5 +499,31 @@ describe('$compile', function(){
         }
       )
     });
+
+    it('shares attributes between directives', function(){
+      var attrs1, attrs2;
+      var injector = makeInjectorWithDirectives({
+        myDir: function(){
+          return {
+            compile: function(element, attrs) {
+              attrs1 = attrs;
+            }
+          }
+        },
+        myOtherDir: function(){
+          return {
+            compile: function(element, attrs) {
+              attrs2 = attrs;
+            }
+          }
+        }
+      });
+
+      injector.invoke(function($compile) {
+        var el = $('<div my-dir my-other-dir></div>');
+        $compile(el);
+        expect(attrs1).toBe(attrs2);
+      })
+    });
   });
 });
