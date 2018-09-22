@@ -581,6 +581,28 @@ describe('$compile', function(){
           expect(gotValue).toEqual('43');
         }
       )
-    })
+    });
+
+    it('allows adding classes', function(){
+      registerAndCompile(
+        'myDirective',
+        '<my-directive></my-directive>',
+        function(element, attrs) {
+          attrs.$addClass('some-class');
+          expect(element.hasClass('some-class')).toBe(true);
+        }
+      )
+    });
+
+    it('allows removing classes', function(){
+      registerAndCompile(
+        'myDirective',
+        '<my-directive class="some-class"></my-directive>',
+        function(element, attrs) {
+          attrs.$removeClass('some-class');
+          expect(element.hasClass('some-class')).toBe(false)
+        }
+      )
+    });
   });
 });

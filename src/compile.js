@@ -90,6 +90,13 @@ function $CompilerProvider($provide) {
         }
       }
     }
+    Attributes.prototype.$addClass = function(className) {
+      this.$$element.addClass(className);
+    }
+
+    Attributes.prototype.$removeClass = function(className) {
+      this.$$element.removeClass(className)
+    }
 
     function compile($compileNodes) {
       return compileNodes($compileNodes);
