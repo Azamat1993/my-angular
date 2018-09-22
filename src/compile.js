@@ -50,7 +50,7 @@ function $CompilerProvider($provide) {
     }
   }
 
-  this.$get = function($injector){
+  this.$get = function($injector, $rootScope){
     function Attributes(element) {
       this.$$element = element;
     }
@@ -59,6 +59,35 @@ function $CompilerProvider($provide) {
       this[key] = value;
       if (writeAttr !== false) {
         this.$$element.attr(key, value);
+      }
+
+      if (this.$$observers && this.$$observers[key]) {
+        _.forEach(this.$$observers[key], function(observer) {
+          try {
+            observer(value);
+          } catch(e) {
+            console.log(e)
+          }
+        });
+      }
+    }
+
+    Attributes.prototype.$observe = function(key ,fn) {
+      var self = this;
+      this.$$observers = this.$$observers || Object.create(null);
+      this.$$observers[key] = this.$$observers[key] || [];
+      this.$$observers[key].push(fn);
+
+      $rootScope.$evalAsync(function() {
+        fn(self[key]);
+      });
+
+      return function(){
+        var index = self.$$observers[key].indexOf(fn);
+
+        if (index >= 0) {
+          self.$$observers[key].splice(index, 1);
+        }
       }
     }
 
