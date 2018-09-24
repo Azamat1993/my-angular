@@ -38,6 +38,9 @@ function $CompilerProvider($provide) {
             directive.name = directive.name || name;
             directive.priority = directive.priority || 0;
             directive.index = i;
+            if (directive.link && !directive.compile) {
+              directive.compile = _.constant(directive.link);
+            }
             return directive;
           });
         }]);
