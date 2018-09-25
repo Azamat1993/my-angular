@@ -119,13 +119,16 @@ function $CompilerProvider($provide) {
         if (directives.length) {
           nodeLinkFn = applyDirectivesToNode(directives, node, attrs);
         }
-        if ((!nodeLinkFn || !nodeLinkFn)  && node.childNodes && node.childNodes.length) {
-          compileNodes(node.childNodes);
+        var childLinkFn;
+
+        if ((!nodeLinkFn || !nodeLinkFn.terminal)  && node.childNodes && node.childNodes.length) {
+          childLinkFn = compileNodes(node.childNodes);
         }
 
-        if (nodeLinkFn) {
+        if (nodeLinkFn || childLinkFn) {
           linkFns.push({
             nodeLinkFn: nodeLinkFn,
+            childLinkFn: childLinkFn,
             idx: i
           })
         }
@@ -133,7 +136,14 @@ function $CompilerProvider($provide) {
 
       function compositeLinkFn(scope, linkNodes) {
         _.forEach(linkFns, function(linkFn) {
-          linkFn.nodeLinkFn(scope, linkNodes[linkFn.idx]);
+          if (linkFn.nodeLinkFn) {
+            linkFn.nodeLinkFn(linkFn.childLinkFn, scope, linkNodes[linkFn.idx]);
+          } else {
+            linkFn.childLinkFn(
+              scope,
+              linkNodes[linkFn.idx].childNodes
+            )
+          }
         })
       }
 
@@ -162,7 +172,10 @@ function $CompilerProvider($provide) {
         }
       });
 
-      function nodeLinkFn(scope, linkNode) {
+      function nodeLinkFn(childLinkFn, scope, linkNode) {
+        if (childLinkFn) {
+          childLinkFn(scope, linkNode.childNodes);
+        }
         _.forEach(linkFns, function(linkFn) {
           var $element = $(linkNode);
           linkFn(scope, $element, attrs);
