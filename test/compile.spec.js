@@ -742,7 +742,7 @@ describe('$compile', function(){
               linkings.push(['pre', element[0]]);
             },
             post: function(scope, element) {
-              linkings.push(['post', elements[0]]);
+              linkings.push(['post', element[0]]);
             }
           }
         };
