@@ -125,6 +125,10 @@ function $CompilerProvider($provide) {
           childLinkFn = compileNodes(node.childNodes);
         }
 
+        if (nodeLinkFn && nodeLinkFn.scope) {
+          attrs.$$element.addClass('ng-scope');
+        }
+
         if (nodeLinkFn || childLinkFn) {
           linkFns.push({
             nodeLinkFn: nodeLinkFn,
@@ -135,13 +139,25 @@ function $CompilerProvider($provide) {
       });
 
       function compositeLinkFn(scope, linkNodes) {
+        var stableNodeList = [];
+
         _.forEach(linkFns, function(linkFn) {
+          var nodeIdx = linkFn.idx;
+          stableNodeList[nodeIdx] = linkNodes[nodeIdx];
+        });
+
+        _.forEach(linkFns, function(linkFn) {
+          var node = stableNodeList[linkFn.idx];
           if (linkFn.nodeLinkFn) {
-            linkFn.nodeLinkFn(linkFn.childLinkFn, scope, linkNodes[linkFn.idx]);
+            if (linkFn.nodeLinkFn.scope) {
+              scope = scope.$new();
+              $(node).data('$scope', scope);
+            }
+            linkFn.nodeLinkFn(linkFn.childLinkFn, scope, node);
           } else {
             linkFn.childLinkFn(
               scope,
-              linkNodes[linkFn.idx].childNodes
+              node.childNodes
             )
           }
         })
@@ -155,9 +171,14 @@ function $CompilerProvider($provide) {
       var terminalPriority = -Number.MAX_VALUE;
       var terminal = false;
       var preLinkFns = [], postLinkFns = [];
+      var newScopeDirective;
       _.forEach(directives, function(directive){
         if (directive.priority < terminalPriority) {
           return false;
+        }
+
+        if (directive.scope) {
+          newScopeDirective = newScopeDirective || directive;
         }
 
         if (directive.compile) {
@@ -190,12 +211,13 @@ function $CompilerProvider($provide) {
           childLinkFn(scope, linkNode.childNodes);
         }
 
-        _.forEach(postLinkFns, function(linkFn) {
+        _.forEachRight(postLinkFns, function(linkFn) {
           linkFn(scope, $element, attrs);
         });
       }
 
       nodeLinkFn.terminal = terminal;
+      nodeLinkFn.scope = newScopeDirective && newScopeDirective.scope;
 
       return nodeLinkFn;
     }
