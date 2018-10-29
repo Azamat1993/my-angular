@@ -882,5 +882,72 @@ describe('$compile', function(){
         expect(el.data('$scope')).toBe(givenScope);
       });
     });
+
+    xit('creates an isolate scope when requested', function(){
+      var givenScope;
+      var injector = makeInjectorWithDirectives('myDirective', function(){
+        return {
+          scope: {},
+          link: function(scope) {
+            givenScope = scope;
+          }
+        };
+      });
+
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive></div>');
+        $compile(el)($rootScope);
+        expect(givenScope.$parent).toBe($rootScope);
+        expect(Object.getPrototypeOf(givenScope)).not.toBe($rootScope);
+      });
+    });
+
+    xit('does not share isolate scope with other directives', function(){
+      var givenScope;
+      var injector = makeInjectorWithDirectives({
+        myDirective: function(){
+          return {
+            scope: {}
+          };
+        },
+        myOtherDirective: function() {
+          return {
+            link: function(scope) {
+              givenScope = scope;
+            }
+          };
+        }
+      });
+
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive my-other-directive></div>');
+        $compile(el)($rootScope);
+        expect(givenScope).toBe($rootScope);
+      });
+    });
+
+    xit('does not use isolate scope on child elements', function(){
+      var givenScope;
+      var injector = makeInjectorWithDirectives({
+        myDirective: function() {
+          return {
+            scope: {}
+          };
+        },
+        myOtherDirective: function() {
+          return {
+            link: function(scope) {
+              givenScope = scope;
+            }
+          };
+        }
+      });
+
+      injector.invoke(function($compile, $rootScope) {
+        var el = $('<div my-directive><div my-other-directive></div></div>');
+        $compile(el)($rootScope);
+        expect(givenScope).toBe($rootScope);
+      });
+    });
   });
 });
