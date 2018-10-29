@@ -14,7 +14,10 @@ function Lexer() {
 var OPERATORS = {
   '+': true,
   '!': true,
-  '-': true
+  '-': true,
+  '*': true,
+  '/': true,
+  '%': true
 };
 
 Lexer.prototype.lex = function(text) {
@@ -148,6 +151,7 @@ AST.MemberExpression = 'MemberExpression';
 AST.CallExpression = 'CallExpression';
 AST.AssignmentExpression = 'AssignmentExpression';
 AST.UnaryExpression = 'UnaryExpression';
+AST.BinaryExpression = 'BinaryExpression';
 
 AST.prototype.constants = {
   'null' : {type: AST.Literal, value: null},
@@ -165,6 +169,22 @@ AST.prototype.program = function(){
   return {type: AST.Program, body: this.assignment()};
 }
 
+AST.prototype.multiplicative = function() {
+  var left = this.unary();
+  var token;
+
+  while ((token = this.expect('*','/','%'))) {
+    left = {
+      type: AST.BinaryExpression,
+      left: left,
+      operator: token.text,
+      right: this.unary()
+    }
+  }
+
+  return left;
+}
+
 AST.prototype.unary = function() {
   var token;
   if ((token = this.expect('+', '!', '-'))) {
@@ -179,10 +199,10 @@ AST.prototype.unary = function() {
 }
 
 AST.prototype.assignment = function() {
-  var left = this.unary();
+  var left = this.multiplicative();
 
   if (this.expect('=')) {
-    var right = this.unary();
+    var right = this.multiplicative();
     return {type: AST.AssignmentExpression, left: left, right: right};
   }
 
@@ -425,6 +445,8 @@ ASTCompiler.prototype.recurse = function(ast, context) {
       return this.assign(leftExpr, this.recurse(ast.right));
     case AST.UnaryExpression:
       return ast.operator + '('+this.recurse(ast.argument)+')';
+    case AST.BinaryExpression:
+      return '('+this.recurse(ast.left)+')' + ast.operator + '('+this.recurse(ast.right)+')';
   }
 }
 
