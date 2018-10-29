@@ -11,6 +11,10 @@ function Lexer() {
 
 }
 
+var OPERATORS = {
+  '+': true
+};
+
 Lexer.prototype.lex = function(text) {
   this.text = text;
   this.index = 0;
@@ -33,7 +37,15 @@ Lexer.prototype.lex = function(text) {
       });
       this.index++;
     } else {
-      throw 'Unexpected next character: ' + this.ch;
+      var ch = OPERATORS[this.ch];
+      if (ch) {
+        this.tokens.push({
+          text: this.ch
+        });
+        this.index++;
+      } else {
+        throw 'Unexpected next character: ' + this.ch;
+      }
     }
   }
 
@@ -133,6 +145,7 @@ AST.ThisExpression = 'ThisExpression';
 AST.MemberExpression = 'MemberExpression';
 AST.CallExpression = 'CallExpression';
 AST.AssignmentExpression = 'AssignmentExpression';
+AST.UnaryExpression = 'UnaryExpression';
 
 AST.prototype.constants = {
   'null' : {type: AST.Literal, value: null},
@@ -150,11 +163,23 @@ AST.prototype.program = function(){
   return {type: AST.Program, body: this.assignment()};
 }
 
+AST.prototype.unary = function() {
+  if (this.expect('+')) {
+    return {
+      type: AST.UnaryExpression,
+      operator: '+',
+      argument: this.primary()
+    }
+  } else {
+    return this.primary();
+  }
+}
+
 AST.prototype.assignment = function() {
-  var left = this.primary();
+  var left = this.unary();
 
   if (this.expect('=')) {
-    var right = this.primary();
+    var right = this.unary();
     return {type: AST.AssignmentExpression, left: left, right: right};
   }
 
@@ -395,6 +420,8 @@ ASTCompiler.prototype.recurse = function(ast, context) {
       }
 
       return this.assign(leftExpr, this.recurse(ast.right));
+    case AST.UnaryExpression:
+      return ast.operator + '('+this.recurse(ast.argument)+')';
   }
 }
 

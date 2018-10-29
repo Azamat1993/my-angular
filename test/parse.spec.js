@@ -2,7 +2,7 @@
 var parse = require('../src/parse');
 var _ = require('lodash');
 
-describe('parse', function(){
+fdescribe('parse', function(){
   it('can parse an integer', function(){
     var fn = parse('42');
     expect(fn).toBeDefined();
@@ -308,5 +308,10 @@ describe('parse', function(){
       var fn = parse('obj.__lookupSetter__("evil")');
       fn({obj: { }});
     }).toThrow();
+  });
+
+  it('parses a unary +', function() {
+    expect(parse('+42')()).toBe(42);
+    expect(parse('+a')({a: 42})).toBe(42);
   });
 });
