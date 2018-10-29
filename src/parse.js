@@ -12,7 +12,9 @@ function Lexer() {
 }
 
 var OPERATORS = {
-  '+': true
+  '+': true,
+  '!': true,
+  '-': true
 };
 
 Lexer.prototype.lex = function(text) {
@@ -164,11 +166,12 @@ AST.prototype.program = function(){
 }
 
 AST.prototype.unary = function() {
-  if (this.expect('+')) {
+  var token;
+  if ((token = this.expect('+', '!', '-'))) {
     return {
       type: AST.UnaryExpression,
-      operator: '+',
-      argument: this.primary()
+      operator: token.text,
+      argument: this.unary()
     }
   } else {
     return this.primary();
