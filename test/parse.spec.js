@@ -343,4 +343,17 @@ fdescribe('parse', function(){
   it('parses several multiplicatives', function(){
     expect(parse('36 * 2 % 5')()).toBe(2);
   });
+
+  it('parses an addition', function() {
+    expect(parse('20 + 22')()).toBe(42);
+  });
+
+  it('parses a substraction', function(){
+    expect(parse('42 - 22')()).toBe(20);
+  });
+
+  it('parses multiplicatives on a higher precedence than additives', function(){
+    expect(parse('2 + 3 * 5')()).toBe(17);
+    expect(parse('2 + 3 * 2 + 3')()).toBe(11);
+  });
 });

@@ -169,6 +169,22 @@ AST.prototype.program = function(){
   return {type: AST.Program, body: this.assignment()};
 }
 
+AST.prototype.additive = function() {
+  var left = this.multiplicative();
+  var token;
+
+  while ((token = this.expect('+')) || (token = this.expect('-'))) {
+    left = {
+      type: AST.BinaryExpression,
+      left: left,
+      operator: token.text,
+      right: this.multiplicative()
+    }
+  }
+
+  return left;
+}
+
 AST.prototype.multiplicative = function() {
   var left = this.unary();
   var token;
@@ -199,10 +215,10 @@ AST.prototype.unary = function() {
 }
 
 AST.prototype.assignment = function() {
-  var left = this.multiplicative();
+  var left = this.additive();
 
   if (this.expect('=')) {
-    var right = this.multiplicative();
+    var right = this.additive();
     return {type: AST.AssignmentExpression, left: left, right: right};
   }
 
